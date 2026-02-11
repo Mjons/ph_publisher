@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import sharp from 'sharp';
 
 export async function GET() {
   try {
@@ -62,14 +63,17 @@ export async function POST(request: NextRequest) {
     : `${slug}-${crypto.randomUUID()}`;
 
   try {
-    // Upload cover
-    const coverExt = cover.name.split('.').pop();
-    const coverPath = `${folder}/cover.${coverExt}`;
-    const coverBuffer = Buffer.from(await cover.arrayBuffer());
+    // Upload cover (optimized)
+    const coverPath = `${folder}/cover.webp`;
+    const rawCoverBuffer = Buffer.from(await cover.arrayBuffer());
+    const coverBuffer = await sharp(rawCoverBuffer)
+      .webp({ quality: 80 })
+      .resize(800, 1200, { fit: 'inside', withoutEnlargement: true })
+      .toBuffer();
 
     const { error: coverError } = await supabaseAdmin.storage
       .from('comics')
-      .upload(coverPath, coverBuffer, { contentType: cover.type });
+      .upload(coverPath, coverBuffer, { contentType: 'image/webp' });
 
     if (coverError) throw coverError;
 
@@ -80,12 +84,17 @@ export async function POST(request: NextRequest) {
     const pageUrls: string[] = [];
 
     for (const page of sortedPages) {
-      const pagePath = `${folder}/${page.name}`;
-      const pageBuffer = Buffer.from(await page.arrayBuffer());
+      const pageName = page.name.replace(/\.[^.]+$/, '.webp');
+      const pagePath = `${folder}/${pageName}`;
+      const rawPageBuffer = Buffer.from(await page.arrayBuffer());
+      const pageBuffer = await sharp(rawPageBuffer)
+        .webp({ quality: 85 })
+        .resize(1600, null, { fit: 'inside', withoutEnlargement: true })
+        .toBuffer();
 
       const { error: pageError } = await supabaseAdmin.storage
         .from('comics')
-        .upload(pagePath, pageBuffer, { contentType: page.type });
+        .upload(pagePath, pageBuffer, { contentType: 'image/webp' });
 
       if (pageError) throw pageError;
 

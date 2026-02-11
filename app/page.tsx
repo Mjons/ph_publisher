@@ -322,7 +322,7 @@ export default function Home() {
 
                 {/* Metadata */}
                 <div>
-                  <h3 className="text-lg font-bold uppercase tracking-tight text-zinc-300 group-hover:text-white transition-colors">
+                  <h3 className="text-sm md:text-lg font-bold uppercase tracking-tight text-zinc-300 group-hover:text-white transition-colors line-clamp-2">
                     {comic.title}
                   </h3>
                   <div className="flex items-center gap-3 mt-1">
