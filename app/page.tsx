@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ComicReader from '@/components/ComicReader';
-import { BookOpen, ArrowUpDown, Eye } from 'lucide-react';
+import { BookOpen, ArrowUpDown, Eye, Filter } from 'lucide-react';
 
 // Define the shape of our data
 interface Comic {
@@ -99,6 +99,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeComic, setActiveComic] = useState<Comic | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [seriesFilter, setSeriesFilter] = useState<'all' | 'standalone' | string>('all');
 
   function recordView(comic: Comic) {
     if (!USE_MOCK) {
@@ -194,18 +195,70 @@ export default function Home() {
       {/* GALLERY GRID */}
       <section className="p-6 md:p-12 max-w-7xl mx-auto">
 
-        {/* Sort Toggle */}
-        {!loading && comics.length > 0 && (
-          <div className="flex justify-end mb-6">
-            <button
-              onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-              className="flex items-center gap-2 text-xs text-zinc-500 hover:text-white uppercase tracking-widest transition-colors"
-            >
-              <ArrowUpDown size={14} />
-              {sortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
-            </button>
-          </div>
-        )}
+        {/* Filters + Sort */}
+        {!loading && comics.length > 0 && (() => {
+          const seriesNames = Array.from(
+            new Map(
+              comics
+                .filter((c) => c.series_name && c.series_slug)
+                .map((c) => [c.series_slug!, c.series_name!])
+            ).entries()
+          );
+          const hasStandalone = comics.some((c) => !c.series_slug);
+
+          return (
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              {/* Series Filter */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Filter size={14} className="text-zinc-600" />
+                <button
+                  onClick={() => setSeriesFilter('all')}
+                  className={`text-xs px-3 py-1 rounded-full uppercase tracking-wider transition-colors ${
+                    seriesFilter === 'all'
+                      ? 'bg-white text-black font-bold'
+                      : 'bg-zinc-900 text-zinc-500 hover:text-white border border-zinc-800'
+                  }`}
+                >
+                  All
+                </button>
+                {seriesNames.map(([slug, name]) => (
+                  <button
+                    key={slug}
+                    onClick={() => setSeriesFilter(slug)}
+                    className={`text-xs px-3 py-1 rounded-full uppercase tracking-wider transition-colors ${
+                      seriesFilter === slug
+                        ? 'bg-purple-600 text-white font-bold'
+                        : 'bg-zinc-900 text-zinc-500 hover:text-white border border-zinc-800'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+                {hasStandalone && (
+                  <button
+                    onClick={() => setSeriesFilter('standalone')}
+                    className={`text-xs px-3 py-1 rounded-full uppercase tracking-wider transition-colors ${
+                      seriesFilter === 'standalone'
+                        ? 'bg-white text-black font-bold'
+                        : 'bg-zinc-900 text-zinc-500 hover:text-white border border-zinc-800'
+                    }`}
+                  >
+                    Standalone
+                  </button>
+                )}
+              </div>
+
+              {/* Sort Toggle */}
+              <button
+                onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+                className="flex items-center gap-2 text-xs text-zinc-500 hover:text-white uppercase tracking-widest transition-colors"
+              >
+                <ArrowUpDown size={14} />
+                {sortOrder === 'newest' ? 'Newest First' : 'Oldest First'}
+              </button>
+            </div>
+          );
+        })()}
 
         {loading ? (
           // LOADING SKELETON
@@ -226,10 +279,16 @@ export default function Home() {
         ) : (
           // COMIC GRID
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
-            {[...comics].sort((a, b) => {
-              const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-              return sortOrder === 'newest' ? diff : -diff;
-            }).map((comic) => (
+            {[...comics]
+              .filter((c) => {
+                if (seriesFilter === 'all') return true;
+                if (seriesFilter === 'standalone') return !c.series_slug;
+                return c.series_slug === seriesFilter;
+              })
+              .sort((a, b) => {
+                const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                return sortOrder === 'newest' ? diff : -diff;
+              }).map((comic) => (
               <article 
                 key={comic.id}
                 onClick={() => openComic(comic)}
