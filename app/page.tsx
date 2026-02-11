@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ComicReader from '@/components/ComicReader';
-import { BookOpen, ArrowUpDown } from 'lucide-react';
+import { BookOpen, ArrowUpDown, Eye } from 'lucide-react';
 
 // Define the shape of our data
 interface Comic {
@@ -14,6 +14,7 @@ interface Comic {
   series_name: string | null;
   series_slug: string | null;
   issue_number: number | null;
+  view_count: number;
 }
 
 // Mock data for previewing the UI without Supabase
@@ -99,6 +100,17 @@ export default function Home() {
   const [activeComic, setActiveComic] = useState<Comic | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
+  function recordView(comic: Comic) {
+    if (!USE_MOCK) {
+      fetch(`/api/comics/${comic.id}/view`, { method: 'POST' });
+    }
+  }
+
+  function openComic(comic: Comic) {
+    setActiveComic(comic);
+    recordView(comic);
+  }
+
   // Fetch comics on load (or use mock data)
   useEffect(() => {
     if (USE_MOCK) {
@@ -157,8 +169,8 @@ export default function Home() {
             nextTitle={nextComic?.title}
             prevTitle={prevComic?.title}
             onClose={() => setActiveComic(null)}
-            onNextComic={nextComic ? () => setActiveComic(nextComic) : undefined}
-            onPrevComic={prevComic ? () => setActiveComic(prevComic) : undefined}
+            onNextComic={nextComic ? () => { setActiveComic(nextComic); recordView(nextComic); } : undefined}
+            onPrevComic={prevComic ? () => { setActiveComic(prevComic); recordView(prevComic); } : undefined}
           />
         );
       })()}
@@ -220,7 +232,7 @@ export default function Home() {
             }).map((comic) => (
               <article 
                 key={comic.id}
-                onClick={() => setActiveComic(comic)}
+                onClick={() => openComic(comic)}
                 className="group cursor-pointer flex flex-col gap-3"
               >
                 {/* Cover Container */}
@@ -254,9 +266,17 @@ export default function Home() {
                   <h3 className="text-lg font-bold uppercase tracking-tight text-zinc-300 group-hover:text-white transition-colors">
                     {comic.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-mono mt-1">
-                    {new Date(comic.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-xs text-zinc-500 font-mono">
+                      {new Date(comic.created_at).toLocaleDateString()}
+                    </p>
+                    {comic.view_count > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-zinc-600 font-mono">
+                        <Eye size={12} />
+                        {comic.view_count}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </article>
             ))}

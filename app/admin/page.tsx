@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Pencil, LogOut } from 'lucide-react';
+import { Plus, Pencil, LogOut, Eye } from 'lucide-react';
 
 interface Comic {
   id: string;
@@ -12,6 +12,7 @@ interface Comic {
   issue_number: number | null;
   is_published: boolean;
   created_at: string;
+  view_count: number;
 }
 
 export default function AdminPage() {
@@ -109,9 +110,15 @@ export default function AdminPage() {
                       {comic.is_published ? 'Published' : 'Draft'}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    {new Date(comic.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-xs text-zinc-500">
+                      {new Date(comic.created_at).toLocaleDateString()}
+                    </p>
+                    <span className="flex items-center gap-1 text-xs text-zinc-500">
+                      <Eye size={12} />
+                      {comic.view_count ?? 0}
+                    </span>
+                  </div>
                 </div>
                 <a
                   href={`/admin/edit/${comic.id}`}
