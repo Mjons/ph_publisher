@@ -62,15 +62,15 @@ export default function ComicReader({
   const isLastPage = currentIndex === pages.length - 1;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
-      
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center animate-in fade-in duration-300">
+
       {/* TOP NAVIGATION BAR */}
-      <div className="absolute top-0 w-full p-4 flex justify-between items-center z-50 text-white/50 hover:text-white transition-colors">
-        
+      <div className="shrink-0 w-full px-4 py-3 flex justify-between items-center z-50 text-white/50 hover:text-white transition-colors bg-black/60 border-b border-white/5">
+
         {/* Left Side: Previous Issue & Title */}
         <div className="flex items-center gap-4">
            {onPrevComic && (
-            <button 
+            <button
               onClick={onPrevComic}
               className="hidden md:flex items-center gap-2 hover:text-purple-400 text-xs uppercase tracking-widest transition-colors"
             >
@@ -86,7 +86,7 @@ export default function ComicReader({
         {/* Right Side: Next Issue & Close */}
         <div className="flex items-center gap-6">
           {onNextComic && (
-            <button 
+            <button
               onClick={onNextComic}
               className="hidden md:flex items-center gap-2 hover:text-purple-400 text-xs uppercase tracking-widest transition-colors"
             >
@@ -101,7 +101,7 @@ export default function ComicReader({
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+      <div className="relative w-full flex-1 min-h-0 flex items-center justify-center p-4 md:p-8">
         
         {/* Previous Page Click Zone */}
         <div 
@@ -157,19 +157,20 @@ export default function ComicReader({
       </div>
 
       {/* PROGRESS BAR */}
-      <div className="absolute bottom-6 w-full max-w-lg flex gap-1 px-4 z-40">
-        {pages.map((_, idx) => (
-          <div 
-            key={idx}
-            className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-              idx === currentIndex ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : idx < currentIndex ? 'bg-white/30' : 'bg-white/10'
-            }`}
-          />
-        ))}
-      </div>
-      
-      <div className="absolute bottom-2 text-xs text-zinc-500 font-mono z-40">
-        PAGE {currentIndex + 1} / {pages.length}
+      <div className="shrink-0 w-full flex flex-col items-center gap-1 px-4 pb-3 pt-2">
+        <div className="w-full max-w-lg flex gap-1">
+          {pages.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : idx < currentIndex ? 'bg-white/30' : 'bg-white/10'
+              }`}
+            />
+          ))}
+        </div>
+        <div className="text-xs text-zinc-500 font-mono">
+          PAGE {currentIndex + 1} / {pages.length}
+        </div>
       </div>
     </div>
   );

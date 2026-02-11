@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('comics')
-    .select('id, title, cover_url, series_name, issue_number, is_published, created_at')
+    .select('id, title, cover_url, brand_name, series_name, issue_number, is_published, created_at')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
   }
 
   const title = formData.get('title') as string | null;
+  const brandName = formData.get('brandName') as string | null;
   const seriesName = formData.get('seriesName') as string | null;
   const issueNumber = formData.get('issueNumber') as string | null;
   const cover = formData.get('cover') as File | null;
@@ -54,6 +55,9 @@ export async function POST(request: NextRequest) {
   }
 
   const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+  const brandSlug = brandName
+    ? brandName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+    : null;
   const seriesSlug = seriesName
     ? seriesName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
     : null;
@@ -108,6 +112,8 @@ export async function POST(request: NextRequest) {
       cover_url: coverUrl,
       pages: pageUrls,
       is_published: true,
+      brand_name: brandSlug ? brandName : null,
+      brand_slug: brandSlug,
       series_name: seriesSlug ? seriesName : null,
       series_slug: seriesSlug,
       issue_number: seriesSlug ? parseInt(issueNumber!, 10) : null,

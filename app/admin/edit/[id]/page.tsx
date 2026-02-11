@@ -9,6 +9,7 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState('');
+  const [brandName, setBrandName] = useState('');
   const [seriesName, setSeriesName] = useState('');
   const [issueNumber, setIssueNumber] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
@@ -29,6 +30,7 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
         const data = await res.json();
 
         setTitle(data.title);
+        setBrandName(data.brand_name || '');
         setSeriesName(data.series_name || '');
         setIssueNumber(data.issue_number?.toString() || '');
         setCoverUrl(data.cover_url);
@@ -72,6 +74,7 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
     try {
       const formData = new FormData();
       formData.append('title', title);
+      if (brandName) formData.append('brandName', brandName);
       if (seriesName) formData.append('seriesName', seriesName);
       if (issueNumber) formData.append('issueNumber', issueNumber);
       formData.append('isPublished', String(isPublished));
@@ -135,6 +138,18 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-3 focus:ring-2 focus:ring-purple-500 outline-none transition"
+            />
+          </div>
+
+          {/* Brand */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Brand</label>
+            <input
+              type="text"
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-3 focus:ring-2 focus:ring-purple-500 outline-none transition"
+              placeholder="Leave empty for unbranded"
             />
           </div>
 

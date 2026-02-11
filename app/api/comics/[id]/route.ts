@@ -48,6 +48,7 @@ export async function PUT(
   }
 
   const title = formData.get('title') as string | null;
+  const brandName = formData.get('brandName') as string | null;
   const seriesName = formData.get('seriesName') as string | null;
   const issueNumber = formData.get('issueNumber') as string | null;
   const isPublished = formData.get('isPublished') === 'true';
@@ -128,6 +129,9 @@ export async function PUT(
 
     // Update database
     const newSlug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+    const newBrandSlug = brandName
+      ? brandName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+      : null;
     const newSeriesSlug = seriesName
       ? seriesName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
       : null;
@@ -139,6 +143,8 @@ export async function PUT(
         slug: newSlug,
         cover_url: finalCoverUrl,
         pages: finalPages,
+        brand_name: newBrandSlug ? brandName : null,
+        brand_slug: newBrandSlug,
         series_name: newSeriesSlug ? seriesName : null,
         series_slug: newSeriesSlug,
         issue_number: newSeriesSlug ? parseInt(issueNumber!, 10) : null,

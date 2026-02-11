@@ -5,6 +5,7 @@ import { useState } from 'react';
 export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
+  const [brandName, setBrandName] = useState('');
   const [seriesName, setSeriesName] = useState('');
   const [issueNumber, setIssueNumber] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -21,6 +22,7 @@ export default function UploadPage() {
     try {
       const formData = new FormData();
       formData.append('title', title);
+      if (brandName) formData.append('brandName', brandName);
       if (seriesName) formData.append('seriesName', seriesName);
       if (issueNumber) formData.append('issueNumber', issueNumber);
       formData.append('cover', coverFile);
@@ -35,6 +37,7 @@ export default function UploadPage() {
 
       alert('Comic Published Successfully!');
       setTitle('');
+      setBrandName('');
       setSeriesName('');
       setIssueNumber('');
       setCoverFile(null);
@@ -68,6 +71,18 @@ export default function UploadPage() {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-3 focus:ring-2 focus:ring-purple-500 outline-none transition"
               placeholder="e.g. The Midnight Shift"
+            />
+          </div>
+
+          {/* Brand (Optional) */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Brand</label>
+            <input
+              type="text"
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-md p-3 focus:ring-2 focus:ring-purple-500 outline-none transition"
+              placeholder="e.g. Neon Line (leave empty for unbranded)"
             />
           </div>
 

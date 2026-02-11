@@ -8,6 +8,7 @@ interface Comic {
   id: string;
   title: string;
   cover_url: string;
+  brand_name: string | null;
   series_name: string | null;
   issue_number: number | null;
   is_published: boolean;
@@ -98,7 +99,12 @@ export default function AdminPage() {
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-white truncate">{comic.title}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {comic.brand_name && (
+                      <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-sm">
+                        {comic.brand_name}
+                      </span>
+                    )}
                     {comic.series_name && (
                       <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-sm">
                         {comic.series_name} #{comic.issue_number}
