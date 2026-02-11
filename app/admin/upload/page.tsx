@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
 
 export default function UploadPage() {
   const [loading, setLoading] = useState(false);
@@ -19,57 +17,21 @@ export default function UploadPage() {
     if (!seriesName && issueNumber) return alert('If an issue number is provided, a series name is required.');
 
     setLoading(true);
-    const slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-    const seriesSlug = seriesName
-      ? seriesName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
-      : null;
-
-    // Series comics share a folder; standalone comics get a unique folder
-    const folder = seriesSlug
-      ? `${seriesSlug}/issue-${issueNumber}`
-      : `${slug}-${uuidv4()}`;
 
     try {
-      // 1. Upload Cover
-      const coverPath = `${folder}/cover.${coverFile.name.split('.').pop()}`;
-      const { error: coverError } = await supabase.storage
-        .from('comics')
-        .upload(coverPath, coverFile);
-      
-      if (coverError) throw coverError;
-      
-      const coverUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/comics/${coverPath}`;
-
-      // 2. Upload Pages (Iterate through them)
-      const pageUrls: string[] = [];
-      
-      // Sort files by name to ensure page order is correct (e.g. page-01.png, page-02.png)
-      const sortedFiles = Array.from(pageFiles).sort((a, b) => a.name.localeCompare(b.name));
-
-      for (const file of sortedFiles) {
-        const pagePath = `${folder}/${file.name}`;
-        const { error: pageError } = await supabase.storage
-          .from('comics')
-          .upload(pagePath, file);
-
-        if (pageError) throw pageError;
-        
-        pageUrls.push(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/comics/${pagePath}`);
+      const formData = new FormData();
+      formData.append('title', title);
+      if (seriesName) formData.append('seriesName', seriesName);
+      if (issueNumber) formData.append('issueNumber', issueNumber);
+      formData.append('cover', coverFile);
+      for (const file of Array.from(pageFiles)) {
+        formData.append('pages', file);
       }
 
-      // 3. Save Metadata to Database
-      const { error: dbError } = await supabase.from('comics').insert({
-        title,
-        slug,
-        cover_url: coverUrl,
-        pages: pageUrls,
-        is_published: true,
-        series_name: seriesSlug ? seriesName : null,
-        series_slug: seriesSlug,
-        issue_number: seriesSlug ? parseInt(issueNumber, 10) : null,
-      });
+      const res = await fetch('/api/comics', { method: 'POST', body: formData });
+      const result = await res.json();
 
-      if (dbError) throw dbError;
+      if (!res.ok) throw new Error(result.error || 'Upload failed');
 
       alert('Comic Published Successfully!');
       setTitle('');

@@ -1,7 +1,6 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { ChevronUp, ChevronDown, X, ArrowLeft } from 'lucide-react';
 
 export default function EditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,24 +20,24 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     const fetchComic = async () => {
-      const { data, error } = await supabase
-        .from('comics')
-        .select('*')
-        .eq('id', id)
-        .single();
+      try {
+        const res = await fetch(`/api/comics/${id}`);
+        if (!res.ok) {
+          alert('Comic not found');
+          return;
+        }
+        const data = await res.json();
 
-      if (error || !data) {
-        alert('Comic not found');
-        return;
+        setTitle(data.title);
+        setSeriesName(data.series_name || '');
+        setIssueNumber(data.issue_number?.toString() || '');
+        setCoverUrl(data.cover_url);
+        setPages(data.pages || []);
+        setIsPublished(data.is_published);
+        setLoading(false);
+      } catch {
+        alert('Failed to load comic');
       }
-
-      setTitle(data.title);
-      setSeriesName(data.series_name || '');
-      setIssueNumber(data.issue_number?.toString() || '');
-      setCoverUrl(data.cover_url);
-      setPages(data.pages || []);
-      setIsPublished(data.is_published);
-      setLoading(false);
     };
     fetchComic();
   }, [id]);
@@ -71,59 +70,31 @@ export default function EditPage({ params }: { params: Promise<{ id: string }> }
     setSaving(true);
 
     try {
-      const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/comics/`;
-      const existingFolder = coverUrl.replace(base, '').split('/').slice(0, -1).join('/');
+      const formData = new FormData();
+      formData.append('title', title);
+      if (seriesName) formData.append('seriesName', seriesName);
+      if (issueNumber) formData.append('issueNumber', issueNumber);
+      formData.append('isPublished', String(isPublished));
+      formData.append('existingCoverUrl', coverUrl);
+      formData.append('existingPages', JSON.stringify(pages));
 
-      let finalCoverUrl = coverUrl;
-
-      // Upload new cover if provided
       if (newCoverFile) {
-        const coverPath = `${existingFolder}/cover.${newCoverFile.name.split('.').pop()}`;
-        const { error: coverError } = await supabase.storage
-          .from('comics')
-          .upload(coverPath, newCoverFile, { upsert: true });
-        if (coverError) throw coverError;
-        finalCoverUrl = `${base}${coverPath}`;
+        formData.append('cover', newCoverFile);
       }
-
-      // Upload new pages
-      let finalPages = [...pages];
       for (const file of newPageFiles) {
-        const pagePath = `${existingFolder}/${file.name}`;
-        const { error: pageError } = await supabase.storage
-          .from('comics')
-          .upload(pagePath, file);
-        if (pageError) throw pageError;
-        finalPages.push(`${base}${pagePath}`);
+        formData.append('newPages', file);
       }
 
-      // Update database
-      const newSlug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-      const newSeriesSlug = seriesName
-        ? seriesName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
-        : null;
+      const res = await fetch(`/api/comics/${id}`, { method: 'PUT', body: formData });
+      const result = await res.json();
 
-      const { error: dbError } = await supabase
-        .from('comics')
-        .update({
-          title,
-          slug: newSlug,
-          cover_url: finalCoverUrl,
-          pages: finalPages,
-          series_name: newSeriesSlug ? seriesName : null,
-          series_slug: newSeriesSlug,
-          issue_number: newSeriesSlug ? parseInt(issueNumber, 10) : null,
-          is_published: isPublished,
-        })
-        .eq('id', id);
-
-      if (dbError) throw dbError;
+      if (!res.ok) throw new Error(result.error || 'Update failed');
 
       alert('Changes saved!');
       setNewCoverFile(null);
       setNewPageFiles([]);
-      setCoverUrl(finalCoverUrl);
-      setPages(finalPages);
+      setCoverUrl(result.coverUrl);
+      setPages(result.pages);
     } catch (error: any) {
       console.error(error);
       alert('Error saving: ' + error.message);

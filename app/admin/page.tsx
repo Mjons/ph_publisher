@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Plus, Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Pencil, LogOut } from 'lucide-react';
 
 interface Comic {
   id: string;
@@ -15,20 +15,24 @@ interface Comic {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [comics, setComics] = useState<Comic[]>([]);
   const [loading, setLoading] = useState(true);
 
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/admin/login');
+  }
+
   useEffect(() => {
     const fetchComics = async () => {
-      const { data, error } = await supabase
-        .from('comics')
-        .select('id, title, cover_url, series_name, issue_number, is_published, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching comics:', error);
-      } else {
+      try {
+        const res = await fetch('/api/comics');
+        if (!res.ok) throw new Error('Failed to fetch comics');
+        const data = await res.json();
         setComics(data || []);
+      } catch (error) {
+        console.error('Error fetching comics:', error);
       }
       setLoading(false);
     };
@@ -44,7 +48,7 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold tracking-tight text-white">Admin</h1>
             <p className="mt-1 text-zinc-500 text-sm">Panel Haus</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <a href="/" className="text-zinc-500 hover:text-white text-sm transition-colors">
               View Site
             </a>
@@ -54,6 +58,12 @@ export default function AdminPage() {
             >
               <Plus size={16} /> Upload New
             </a>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-zinc-500 hover:text-red-400 text-sm transition-colors"
+            >
+              <LogOut size={16} /> Logout
+            </button>
           </div>
         </div>
 

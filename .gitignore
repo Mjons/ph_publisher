@@ -18,3 +18,9 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 nul
+
+# markdown	
+*.md
+
+# claude
+.claude/
