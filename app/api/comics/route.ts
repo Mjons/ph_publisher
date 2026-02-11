@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabaseAdmin
     .from('comics')
-    .select('id, title, cover_url, brand_name, series_name, issue_number, is_published, created_at')
+    .select('id, title, cover_url, brand_name, series_name, issue_number, is_published, view_count, created_at')
     .order('created_at', { ascending: false });
 
   if (error) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ComicReader from '@/components/ComicReader';
-import { BookOpen, ArrowUpDown, Eye, Filter } from 'lucide-react';
+import { BookOpen, ArrowUpDown, Eye, Filter, Share2, Check } from 'lucide-react';
 
 // Define the shape of our data
 interface Comic {
@@ -125,6 +125,15 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [brandFilter, setBrandFilter] = useState<'all' | string>('all');
   const [seriesFilter, setSeriesFilter] = useState<'all' | 'standalone' | string>('all');
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  function copyShareLink(e: React.MouseEvent, slug: string) {
+    e.stopPropagation();
+    const url = `${window.location.origin}/comics/${slug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedSlug(slug);
+    setTimeout(() => setCopiedSlug(null), 2000);
+  }
 
   function recordView(comic: Comic) {
     if (!USE_MOCK) {
@@ -418,6 +427,13 @@ export default function Home() {
                         {comic.view_count}
                       </span>
                     )}
+                    <button
+                      onClick={(e) => copyShareLink(e, comic.slug)}
+                      className="flex items-center gap-1 text-xs text-zinc-600 hover:text-purple-400 transition-colors ml-auto"
+                      title="Copy share link"
+                    >
+                      {copiedSlug === comic.slug ? <Check size={12} /> : <Share2 size={12} />}
+                    </button>
                   </div>
                 </div>
               </article>
